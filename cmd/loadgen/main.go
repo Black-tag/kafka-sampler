@@ -6,10 +6,10 @@ import (
 	"log"
 	"os"
 
-	
 	"github.com/Black-tag/kafka-sampler/internal/kafka/publisher"
 	"github.com/Black-tag/kafka-sampler/internal/kafka/subscriber"
 	"github.com/Black-tag/kafka-sampler/internal/load"
+	logger "github.com/Black-tag/kafka-sampler/internal/logging"
 	"github.com/Black-tag/kafka-sampler/internal/metrics"
 	"go.yaml.in/yaml/v2"
 )
@@ -35,16 +35,20 @@ func main() {
 		
 
 	// }
+	logger.Log.Info("starting application")
 
 	var cfg load.GeneratorConfig
 	file, err := os.Open("internal/config/config.yml")
 	if err != nil {
 		log.Fatal(err)
+		logger.Log.DPanic("cannot open config")
+
 	}
 	defer file.Close()
 
 	decoder := yaml.NewDecoder(file)
 	if err := decoder.Decode(&cfg); err != nil {
+		logger.Log.Error("could not decode config into struct")
 		log.Fatal(err)
 	}
 

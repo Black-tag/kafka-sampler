@@ -1,5 +1,5 @@
 {
-  "num_messages": 1000,
+  "num_messages": 10,
   "ticker_interval": "5s",
   "topic": "load-test",
   "key": "load-key",
