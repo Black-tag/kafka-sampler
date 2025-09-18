@@ -1,0 +1,12 @@
+{
+  "num_messages": 1000,
+  "ticker_interval": "5s",
+  "topic": "load-test",
+  "key": "load-key",
+  "enable_metrics": true,
+  "brokers": ["localhost:9092", "localhost:9093"],
+  "num_consumers": 3,
+  "consumer_group": "loadgen-group",
+  "partitions": 6,
+  "replication": 2
+}

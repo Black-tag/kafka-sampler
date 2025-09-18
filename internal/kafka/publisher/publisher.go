@@ -2,9 +2,11 @@ package publisher
 
 import (
 	"context"
+	
 	"time"
 
 	"github.com/segmentio/kafka-go"
+	"github.com/Black-tag/kafka-sampler/internal/metrics"
 )
 
 
@@ -13,16 +15,17 @@ import (
 
 type Producer struct {
 	writer *kafka.Writer
+	metrics *metrics.Metrics
 }
 
 
 
-func NewProducer(brokers []string, topic string) *Producer {
+func NewProducer(brokers []string, topic string, m *metrics.Metrics) *Producer {
 	w := kafka.NewWriter(kafka.WriterConfig{
 		Brokers: brokers,
 		Topic: topic,
 	})
-	return &Producer{writer: w}
+	return &Producer{writer: w, metrics: m}
 }
 
 
@@ -33,8 +36,17 @@ func (p *Producer) SendMessage(key,value string) error {
 	msg := kafka.Message{
 		Key: []byte(key),
 		Value: []byte(value),
+		Time: time.Now(),
 	}
-	return p.writer.WriteMessages(ctx, msg)
+	err := p.writer.WriteMessages(ctx, msg)
+
+	if err != nil {
+		p.metrics.IncErrors()
+		return err
+	}
+	p.metrics.IncProduced()
+	p.metrics.AddLatency(time.Since(msg.Time))
+	return nil
 }
 
 
