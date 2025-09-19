@@ -1,0 +1,36 @@
+name: kafka-sampler
+
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/Checkout@v3
+
+
+      - name: Set up Go 
+        uses: actions/setup-go@v4
+        with:
+          go-version: "1.24.0"
+
+
+      - name: Run go format
+        run: go fmt ./...
+
+      - name: Run go vet
+        run: go vet ./..
+
+      - name: Run golangci-lint
+        run: golangci/golangci-lint-action@v3
+        with:
+          version: latest
+
+      
