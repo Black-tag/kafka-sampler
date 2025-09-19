@@ -5,57 +5,49 @@ import (
 	"time"
 )
 
-
-
 type Metrics struct {
-	Produced    int64
-	Consumed    int64
-	Errors      int64
-	Latencies   []time.Duration
-
+	Produced  int64
+	Consumed  int64
+	Errors    int64
+	Latencies []time.Duration
 
 	mu sync.Mutex
 }
 
 type Snapshot struct {
-	Produced    int64
-	Consumed    int64
-	Errors      int64
-	Latencies   []time.Duration
-	 
+	Produced  int64
+	Consumed  int64
+	Errors    int64
+	Latencies []time.Duration
 }
 
-
-func (m *Metrics) TakeSnapshot() Snapshot{
+func (m *Metrics) TakeSnapshot() Snapshot {
 
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	latenciesCopy := make([]time.Duration, len(m.Latencies))
 	copy(latenciesCopy, m.Latencies)
 	return Snapshot{
-		Produced: m.Produced,
-		Consumed: m.Consumed,
-		Errors:   m.Errors,
-		Latencies: latenciesCopy, 
-
-		
+		Produced:  m.Produced,
+		Consumed:  m.Consumed,
+		Errors:    m.Errors,
+		Latencies: latenciesCopy,
 	}
 }
 
-
-func (m *Metrics)IncProduced() {
+func (m *Metrics) IncProduced() {
 	m.mu.Lock()
 	m.Produced++
 	m.mu.Unlock()
 }
 
-func (m *Metrics)IncConsumed() {
+func (m *Metrics) IncConsumed() {
 	m.mu.Lock()
 	m.Consumed++
 	m.mu.Unlock()
 }
 
-func (m *Metrics)IncErrors() {
+func (m *Metrics) IncErrors() {
 	m.mu.Lock()
 	m.Errors++
 	m.mu.Unlock()

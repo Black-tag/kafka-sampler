@@ -2,6 +2,7 @@ package publisher
 
 import (
 	"context"
+	"fmt"
 
 	"time"
 
@@ -10,36 +11,30 @@ import (
 	"github.com/segmentio/kafka-go"
 )
 
-
-
-
-
 type Producer struct {
-	writer *kafka.Writer
+	writer  *kafka.Writer
 	metrics *metrics.Metrics
 }
-
-
 
 func NewProducer(brokers []string, topic string, m *metrics.Metrics) *Producer {
 	w := kafka.NewWriter(kafka.WriterConfig{
 		Brokers: brokers,
-		Topic: topic,
+		Topic:   topic,
 	})
-	logger.Log.Info("produced a new produce" )
+	logger.Log.Info("produced a new produce")
 	return &Producer{writer: w, metrics: m}
 }
 
+func (p *Producer) SendMessage(key, value string) error {
 
-func (p *Producer) SendMessage(key,value string) error {
 	logger.Log.Info("entered Sendmessege function")
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	msg := kafka.Message{
-		Key: []byte(key),
+		Key:   []byte(key),
 		Value: []byte(value),
-		Time: time.Now(),
+		Time:  time.Now(),
 	}
 	logger.Log.Info("msg produced")
 	err := p.writer.WriteMessages(ctx, msg)
@@ -55,7 +50,11 @@ func (p *Producer) SendMessage(key,value string) error {
 	return nil
 }
 
-
 func (p *Producer) Close() error {
-	return p.writer.Close()
+	err := p.writer.Close()
+	if err != nil {
+		logger.Log.Error("cannot close producer")
+		fmt.Printf("canot close producer: %v", err)
+	}
+	return  err
 }
