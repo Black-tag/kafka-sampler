@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"sync"
 
 	"github.com/Black-tag/kafka-sampler/internal/kafka/publisher"
 	"github.com/Black-tag/kafka-sampler/internal/kafka/subscriber"
@@ -14,9 +15,7 @@ import (
 	"go.yaml.in/yaml/v2"
 )
 
-
 func main() {
-
 
 	// brokers := []string{"localhost:9092"}
 	// topic := "load-test"
@@ -32,7 +31,6 @@ func main() {
 	// 	ConsumerGroup: "load-group",
 	// 	Partitions: 1,
 	// 	Replication: 1,
-		
 
 	// }
 	logger.Log.Info("starting application")
@@ -44,7 +42,13 @@ func main() {
 		logger.Log.DPanic("cannot open config")
 
 	}
-	defer file.Close()
+	defer func() {
+		if cerr := file.Close(); cerr != nil {
+			logger.Log.Error("cannot close file")
+			fmt.Println(cerr)
+
+		}
+	}()
 
 	decoder := yaml.NewDecoder(file)
 	if err := decoder.Decode(&cfg); err != nil {
@@ -52,30 +56,37 @@ func main() {
 		log.Fatal(err)
 	}
 
+	var wg sync.WaitGroup
 
-
-	
 	m := &metrics.Metrics{}
-	producer := publisher.NewProducer(cfg.Brokers, cfg.Topic, m)
-	defer producer.Close()
 
+	// producer := publisher.NewProducer(cfg.Brokers, cfg.Topic, m)
+	producer := make([]*publisher.Producer, cfg.NumProducer)
+	for i := 0; i < cfg.NumProducer; i++ {
+		producer[i] = publisher.NewProducer(cfg.Brokers, cfg.Topic, m)
+		defer func() {
+			if cerr := producer[i].Close(); cerr != nil {
+				logger.Log.Error("cannot close producer")
+				fmt.Printf("cannot close producer: %v",cerr)
+			}
+
+		}()
+	}
 
 	load.Generate(producer, m, cfg)
-	
 
 	ctx := context.Background()
 	consumer := subscriber.NewConsumer([]string{"localhost:9092"}, "load-test", "load-group", m)
 	defer consumer.Close()
 
-	
-
-	consumer.StartConsuming(ctx, func(key, value string) {
-		log.Println("recieved:", key, value)
-		
-	})
-	fmt.Printf("produced=%d consumed=%d, Errors=%d latency=%v", m.Produced, m.Consumed, m.Errors, m.Latencies)
+	for i := 0; i < cfg.NumConsumers; i++ {
+		wg.Add(1)
+		go consumer.StartConsuming(ctx, func(key, value string) {
+			fmt.Printf("Consumer %d consumed key=%s, value=%s | produced=%d, consumed=%d, errors=%d\n",
+				i, key, value, m.Produced, m.Consumed, m.Errors)
+		}, i, &wg)
+	}
 
 	select {}
 
-	
 }
