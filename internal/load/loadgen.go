@@ -51,6 +51,7 @@ func Generate(producer []*publisher.Producer, m *metrics.Metrics, cfg GeneratorC
 			} else {
 				fmt.Println("produced:", msg)
 			}
+			metrics.MessageProduced.Inc()
 		}(i)
 
 	}

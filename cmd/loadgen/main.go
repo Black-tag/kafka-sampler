@@ -21,22 +21,7 @@ func main() {
 
 	
 
-	// brokers := []string{"localhost:9092"}
-	// topic := "load-test"
-
-	// cfg := load.GeneratorConfig{
-	// 	NumMessages: 20,
-	// 	Topic: "load-test",
-	// 	Key: "test-key",
-	// 	EnableMetrics: true,
-
-	// 	Brokers: brokers,
-	// 	NumConsumers: 5,
-	// 	ConsumerGroup: "load-group",
-	// 	Partitions: 1,
-	// 	Replication: 1,
-
-	// }
+	metrics.RecordMetrics()
 	logger.Log.Info("starting application")
 
 	var cfg load.GeneratorConfig
