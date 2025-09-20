@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"sync"
 
@@ -12,10 +13,13 @@ import (
 	"github.com/Black-tag/kafka-sampler/internal/load"
 	logger "github.com/Black-tag/kafka-sampler/internal/logging"
 	"github.com/Black-tag/kafka-sampler/internal/metrics"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.yaml.in/yaml/v2"
 )
 
 func main() {
+
+	
 
 	// brokers := []string{"localhost:9092"}
 	// topic := "load-test"
@@ -60,6 +64,20 @@ func main() {
 
 	m := &metrics.Metrics{}
 
+
+	
+	go func () {
+		http.Handle("/metrics", promhttp.Handler())
+		err := http.ListenAndServe(":2112", nil)
+		if err != nil {
+			logger.Log.Error("cannot start the prometheus endpoint")
+			fmt.Println("error in loading metrics")
+		}
+
+	}()
+	
+
+
 	// producer := publisher.NewProducer(cfg.Brokers, cfg.Topic, m)
 	producer := make([]*publisher.Producer, cfg.NumProducer)
 	for i := 0; i < cfg.NumProducer; i++ {
@@ -89,4 +107,5 @@ func main() {
 
 	select {}
 
+	
 }
