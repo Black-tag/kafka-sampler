@@ -34,12 +34,14 @@ var payload = []string{
 	"{\"data\": \"order shipped\"}",
 }
 
+var rng = rand.New(rand.NewSource(time.Now().UnixNano()))
+
 func randomMessage() Message {
-	rand.Seed(time.Now().UnixNano())
+	
 	return Message{
-		Event:   events[rand.Intn(len(events))],
-		UserID:  rand.Intn(1000),
-		Payload: payload[rand.Intn(len(payload))],
+		Event:   events[rng.Intn(len(events))],
+		UserID:  rng.Intn(1000),
+		Payload: payload[rng.Intn(len(payload))],
 	}
 }
 

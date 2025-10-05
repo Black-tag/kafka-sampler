@@ -3,6 +3,7 @@ module github.com/Black-tag/kafka-sampler
 go 1.24.0
 
 require (
+	github.com/google/uuid v1.6.0
 	github.com/prometheus/client_golang v1.23.2
 	github.com/segmentio/kafka-go v0.4.49
 	go.uber.org/zap v1.27.0
