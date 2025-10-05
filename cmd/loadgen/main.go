@@ -19,8 +19,6 @@ import (
 
 func main() {
 
-	
-
 	metrics.RecordMetrics()
 	logger.Log.Info("starting application")
 
@@ -49,9 +47,7 @@ func main() {
 
 	m := &metrics.Metrics{}
 
-
-	
-	go func () {
+	go func() {
 		http.Handle("/metrics", promhttp.Handler())
 		err := http.ListenAndServe(":2112", nil)
 		if err != nil {
@@ -60,8 +56,6 @@ func main() {
 		}
 
 	}()
-	
-
 
 	// producer := publisher.NewProducer(cfg.Brokers, cfg.Topic, m)
 	producer := make([]*publisher.Producer, cfg.NumProducer)
@@ -70,7 +64,7 @@ func main() {
 		defer func() {
 			if cerr := producer[i].Close(); cerr != nil {
 				logger.Log.Error("cannot close producer")
-				fmt.Printf("cannot close producer: %v",cerr)
+				fmt.Printf("cannot close producer: %v", cerr)
 			}
 
 		}()
@@ -79,7 +73,7 @@ func main() {
 	load.Generate(producer, m, cfg)
 
 	ctx := context.Background()
-	consumer := subscriber.NewConsumer([]string{"localhost:9092"}, "load-test", "load-group", m)
+	consumer := subscriber.NewConsumer(cfg.Brokers, cfg.Topic, cfg.ConsumerGroup, m)
 	defer consumer.Close()
 
 	for i := 0; i < cfg.NumConsumers; i++ {
@@ -92,5 +86,4 @@ func main() {
 
 	select {}
 
-	
 }

@@ -56,5 +56,5 @@ func (p *Producer) Close() error {
 		logger.Log.Error("cannot close producer")
 		fmt.Printf("canot close producer: %v", err)
 	}
-	return  err
+	return err
 }
