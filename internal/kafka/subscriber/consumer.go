@@ -57,7 +57,7 @@ func (c *Consumer) StartConsuming(ctx context.Context, handle func(key, value st
 			c.metrics.IncErrors()
 
 		}
-		logger.Log.Info("no error in Redaing msg")
+		logger.Log.Info("no error in Reding msg")
 		c.metrics.IncConsumed()
 		latency := time.Since(msg.Time)
 		c.metrics.AddLatency(latency)

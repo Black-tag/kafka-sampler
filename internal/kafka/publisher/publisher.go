@@ -7,6 +7,7 @@ import (
 	"time"
 
 	logger "github.com/Black-tag/kafka-sampler/internal/logging"
+	"github.com/Black-tag/kafka-sampler/internal/messages"
 	"github.com/Black-tag/kafka-sampler/internal/metrics"
 	"github.com/segmentio/kafka-go"
 )
@@ -31,13 +32,18 @@ func (p *Producer) SendMessage(key, value string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
+	message, _, err := messages.GeneraterandomMessage()
+	if err != nil {
+		return fmt.Errorf("couldn't produce random message: %v", err)
+	}
+	
 	msg := kafka.Message{
 		Key:   []byte(key),
-		Value: []byte(value),
+		Value: message,
 		Time:  time.Now(),
 	}
 	logger.Log.Info("msg produced")
-	err := p.writer.WriteMessages(ctx, msg)
+	err = p.writer.WriteMessages(ctx, msg)
 
 	if err != nil {
 		p.metrics.IncErrors()

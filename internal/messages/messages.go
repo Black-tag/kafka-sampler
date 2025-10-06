@@ -37,12 +37,15 @@ var payload = []string{
 var rng = rand.New(rand.NewSource(time.Now().UnixNano()))
 
 func randomMessage() Message {
+	// fmt.Printf(randomMessage().Event)
+	// fmt.Printf(randomMessage().Payload)
 	
 	return Message{
 		Event:   events[rng.Intn(len(events))],
 		UserID:  rng.Intn(1000),
 		Payload: payload[rng.Intn(len(payload))],
 	}
+	
 }
 
 func GenerateJSONMesssage() ([]byte, error) {
