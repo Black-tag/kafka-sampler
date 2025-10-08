@@ -7,68 +7,46 @@ import (
 	"math/rand"
 	"time"
 
-	logger "github.com/Black-tag/kafka-sampler/internal/logging"
+	"github.com/google/uuid"
 )
 
+
+
+
+
+
 type Message struct {
-	Event   string `json:"event" xml:"event"`
-	UserID  int    `json:"user_id" xml:"user_id"`
-	Payload string `json:"payload" xml:"payload"`
-}
-
-var events = []string{
-	"user_signup",
-	"user_login",
-	"user_deletion",
-	"order_created",
-	"order_dispatched",
-	"order_canceled",
-	"order_confirmed",
-}
-
-var payload = []string{
-	"{\"data\": \"user created successfully\"}",
-	"{\"data\": \"payment failed due to card decline\"}",
-	"{\"data\": \"item added to cart\"}",
-	"{\"data\": \"user logged out\"}",
-	"{\"data\": \"order shipped\"}",
-}
-
-var rng = rand.New(rand.NewSource(time.Now().UnixNano()))
-
-func randomMessage() Message {
-	// fmt.Printf(randomMessage().Event)
-	// fmt.Printf(randomMessage().Payload)
-	
-	return Message{
-		Event:   events[rng.Intn(len(events))],
-		UserID:  rng.Intn(1000),
-		Payload: payload[rng.Intn(len(payload))],
-	}
-	
-}
-
-func GenerateJSONMesssage() ([]byte, error) {
-	logger.Log.Info("enetered json message generator function")
-
-	msg := randomMessage()
-	data, err := json.Marshal(msg)
-	if err != nil {
-		return nil, fmt.Errorf("could not marshal json: %v", err)
-	}
-	return data, nil
-
-}
-
-func GenerateXMLMessage() ([]byte, error) {
-	logger.Log.Info("enetered xml message generator function")
-	msg := randomMessage()
-	data, err := xml.MarshalIndent(msg, "", " ")
-	if err != nil {
-		return nil, fmt.Errorf("could not marshal xml msg")
-
-	}
-	return data, nil
+    ID        string `json:"id" xml:"id"`
+    Format    string `json:"format" xml:"format"` // json, xml, avro, etc.
+    Event     string `json:"event" xml:"event"`
+    UserID    int    `json:"user_id" xml:"user_id"`
+    Payload   string `json:"payload" xml:"payload"`
+    Timestamp int64  `json:"timestamp" xml:"timestamp"`
 }
 
 
+
+func GenerateRandomMessage() ([]byte, string, error) {
+    formats := []string{"json", "xml"}
+    format := formats[rand.Intn(len(formats))]
+
+    msg := Message{
+        ID:        uuid.New().String(),
+        Format:    format,
+        Event:     "UserSignedIn",
+        UserID:    rand.Intn(10000),
+        Payload:   fmt.Sprintf("Payload-%d", rand.Intn(999999)),
+        Timestamp: time.Now().UnixMilli(),
+    }
+
+    switch format {
+    case "json":
+        data, err := json.Marshal(msg)
+        return data, format, err
+    case "xml":
+        data, err := xml.Marshal(msg)
+        return data, format, err
+    default:
+        return nil, "", fmt.Errorf("unknown format: %s", format)
+    }
+}

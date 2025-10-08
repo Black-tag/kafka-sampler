@@ -1,5 +1,5 @@
 {
-  "num_messages": 100,
+  "num_messages": 300,
   "ticker_interval": "5s",
   "topic": "load-test",
   "key": "load-key",
@@ -9,5 +9,11 @@
   "num_producers":3,
   "consumer_group": "loadgen-group",
   "partitions": 6,
-  "replication": 2
+  "replication": 2,
+  "payload_format": "json",
+  "min_payload_size": 512,
+  "max_payload_size": 1048576,
+  "message_rate": 100,
+  enable_webhook: true,
+  "webhook_endpoint": "http://localhost:8082/webhook"
 }

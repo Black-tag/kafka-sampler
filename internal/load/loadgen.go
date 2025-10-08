@@ -1,12 +1,15 @@
 package load
 
 import (
+	"bytes"
 	"fmt"
+	"net/http"
 	"sync"
 	"time"
 
 	"github.com/Black-tag/kafka-sampler/internal/kafka/publisher"
 	logger "github.com/Black-tag/kafka-sampler/internal/logging"
+	"github.com/Black-tag/kafka-sampler/internal/messages"
 	"github.com/Black-tag/kafka-sampler/internal/metrics"
 	"go.uber.org/zap"
 )
@@ -23,6 +26,13 @@ type GeneratorConfig struct {
 	ConsumerGroup string   `yaml:"consumer_group"`
 	Partitions    int      `yaml:"partitions"`
 	Replication   int      `yaml:"replication"`
+	PayloadFormat    string   `yaml:"payload_format"` 
+	MinPayloadSize int     `yaml:"min_payload_size"`
+	MaxPayloadSize int     `yaml:"max_payload_size"`
+	MessageRate    int     `yaml:"message_rate"`
+	WebhookEndpoint string `yaml:"webhook_endpoint"`
+	EnableWebhook   bool   `yaml:"enable_webhook"`
+
 }
 
 func Generate(producer []*publisher.Producer, m *metrics.Metrics, cfg GeneratorConfig) {
@@ -32,11 +42,14 @@ func Generate(producer []*publisher.Producer, m *metrics.Metrics, cfg GeneratorC
 
 	for i := 0; i < cfg.NumMessages; i++ {
 		wg.Add(1)
+
+
 		go func(i int) {
 			defer wg.Done()
 
 			logger.Log.Info("starting to produce msg")
-			msg := fmt.Sprintf("message-%d", i)
+			msg, payload, err := messages.GenerateRandomMessage()
+			
 			logger.Log.Info("current value of i", zap.Int("i", i))
 			if len(producer) == 0 {
 				panic("no producers availible")
@@ -44,7 +57,7 @@ func Generate(producer []*publisher.Producer, m *metrics.Metrics, cfg GeneratorC
 			}
 			p := producer[i%len(producer)]
 			logger.Log.Info("current producer", zap.Int("producer", cfg.NumProducer))
-			err := p.SendMessage(cfg.Key, msg)
+			err = p.SendMessage(cfg.Key, string(msg))
 			if err != nil {
 				logger.Log.Error("error producing msgs")
 				fmt.Println("error in producing message", err)
@@ -52,6 +65,12 @@ func Generate(producer []*publisher.Producer, m *metrics.Metrics, cfg GeneratorC
 				fmt.Println("produced:", msg)
 			}
 			metrics.MessageProduced.Inc()
+
+			if cfg.EnableWebhook && cfg.WebhookEndpoint != "" {
+				go func() {
+					http.Post(cfg.WebhookEndpoint, "application/octet-stream", bytes.NewReader([]byte(payload)))
+				}()
+			}
 		}(i)
 
 	}

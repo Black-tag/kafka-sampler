@@ -32,7 +32,7 @@ func (p *Producer) SendMessage(key, value string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	message, _, err := messages.GeneraterandomMessage()
+	message, _, err := messages.GenerateRandomMessage()
 	if err != nil {
 		return fmt.Errorf("couldn't produce random message: %v", err)
 	}
